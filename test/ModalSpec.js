@@ -11,6 +11,21 @@ import { render, shouldWarn } from './helpers';
 
 const $ = componentOrNode => jQuery(ReactDOM.findDOMNode(componentOrNode));
 
+
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error, info) {
+    this.props.onError(error, info)
+  }
+
+  unstable_handleError(error) {
+    this.props.onError(error);
+  }
+
+  render() {
+    return this.props.children;
+  }
+}
+
 describe('Modal', function () {
   let mountPoint;
 
@@ -172,14 +187,18 @@ describe('Modal', function () {
   });
 
   it('Should throw with multiple children', function () {
-    expect(function(){
-      render(
+    render(
+      <ErrorBoundary
+        onError={err => {
+          expect(err.message).to.match(/React.Children.only expected to receive a single React element child./)
+        }}
+      >
         <Modal show>
           <strong>Message</strong>
           <strong>Message</strong>
         </Modal>
-      , mountPoint);
-    }).to.throw(/React.Children.only expected to receive a single React element child./);
+      </ErrorBoundary>
+    , mountPoint);
   });
 
   it('Should add role to child', function () {
